@@ -1,0 +1,5 @@
+namespace User {
+  class User {
+    
+  };
+};
