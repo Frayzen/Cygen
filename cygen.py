@@ -5,7 +5,7 @@ from namespace import NamespaceHolder
 from io import open
 
 
-def parseFile(path):
+def parseFile(path) -> NamespaceHolder:
 
     # Compile the C++ grammar
     fileContent = open(path).read()
