@@ -20,19 +20,40 @@ def parseFile(path) -> NamespaceHolder:
     )
     cursor = tree.walk()
 
-    namespace = NamespaceHolder("")
+    rootNamespace = NamespaceHolder(path, "")
 
-    def parse_cur(node: Node):
+    def parse_cur(node: Node, curNamespace: NamespaceHolder):
         if node.type == "function_declarator":
-            namespace.push_method(node)
+            curNamespace.push_method(node)
+        elif node.type == "namespace_definition":
+            return curNamespace.create_subnamespace(node)
+        return curNamespace
 
-    def traverse():
+    def traverse(curNamespace: NamespaceHolder):
+        subNamespace = parse_cur(cursor.node, curNamespace)
         if cursor.goto_first_child():
-            traverse()
+            traverse(subNamespace)
             cursor.goto_parent()
-        parse_cur(cursor.node)
         if cursor.goto_next_sibling():
-            traverse()
+            traverse(curNamespace)
 
-    traverse()
-    return namespace
+    traverse(rootNamespace)
+    return rootNamespace
+
+
+defaultPrefix = "#distutils: language = c++\n#cython: language_level = 3\n\n"
+
+
+def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> str:
+
+    def generateNamespace(namespace: NamespaceHolder):
+        builder = ""
+        if not namespace.empty():
+            builder += f'cdef extern from "{namespace.filePath}" namespace "{namespace.name}":\n'
+            for m in namespace.methods:
+                builder += "    " + str(m) + "\n"
+        for sub in namespace.subnamepsaces:
+            builder += generateNamespace(sub)
+        return builder
+
+    return prefix + generateNamespace(namespace)
