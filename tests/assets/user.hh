@@ -1,5 +1,0 @@
-namespace User {
-  class User {
-    
-  };
-};
