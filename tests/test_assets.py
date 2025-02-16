@@ -56,3 +56,18 @@ cdef extern from "tests/assets/classes.hh":
         int other()
     """
     checkGen(namespace, expected)
+
+
+def test_template():
+    namespace = parseFile("tests/assets/templates.hh")
+    expected = """
+cdef extern from "tests/assets/templates.hh":
+    cdef cppclass TestClass[Type]:
+        TestClass(Type *a)
+        void test(char o)
+        OtherType test[OtherType](OtherType a)
+        void test[int](int a)
+        cdef cppclass InnerClass:
+            void defaultPrivate(int a)
+    """
+    checkGen(namespace, expected)

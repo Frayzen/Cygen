@@ -34,6 +34,8 @@ def parseFile(path) -> NamespaceHolder:
         elif node.type == "access_specifier":
             assert isinstance(context, ClassHolder)
             context.set_access(node)
+        elif node.type == "template_declaration":
+            context.set_template(node)
         return context
 
     def traverse(curContext: ContextHolder):
