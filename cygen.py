@@ -36,6 +36,8 @@ def parseFile(path) -> NamespaceHolder:
             context.set_access(node)
         elif node.type == "template_declaration":
             context.set_template(node)
+        elif node.type == "type_definition":
+            context.push_typename(node)
         return context
 
     def traverse(curContext: ContextHolder):
@@ -59,6 +61,8 @@ def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> s
         builder = ""
         if isinstance(context, ClassHolder):
             builder += f"{tabs}cdef cppclass {context.name}:\n"
+        for typename in context.typenames:
+            builder += f"    {tabs}cdef cppclass {typename}:\n        {tabs}pass\n"
         for m in context.methods:
             builder += tabs + "    " + str(m) + "\n"
         for subc in context.classes:

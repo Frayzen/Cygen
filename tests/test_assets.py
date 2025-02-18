@@ -71,3 +71,14 @@ cdef extern from "tests/assets/templates.hh":
             void defaultPrivate(int a)
     """
     checkGen(namespace, expected)
+
+
+def test_typedef():
+    namespace = parseFile("tests/assets/typedef.hh")
+    expected = """
+cdef extern from "tests/assets/typedef.hh":
+    cdef cppclass Ok:
+        pass
+    Ok test(Ok a, Ok* b)
+    """
+    checkGen(namespace, expected)

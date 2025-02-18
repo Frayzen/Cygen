@@ -1,5 +1,5 @@
 from tree_sitter import Node
-from typing import List
+from typing import List, Tuple
 
 
 class Method:
@@ -18,7 +18,8 @@ class Method:
 class ContextHolder:
     def __init__(self) -> None:
         self.methods: List[Method] = []
-        self.classes = []
+        self.classes: List[ClassHolder] = []
+        self.typenames: List[str] = []
         self.template = None
 
     def empty(self):  # if it is worth printing
@@ -37,6 +38,10 @@ class ContextHolder:
                 node.child_by_field_name("parameters").text.decode(),
             )
         )
+
+    def push_typename(self, node: Node) -> None:
+        print(node)
+        self.typenames.append(node.child_by_field_name("declarator").text.decode())
 
     def create_subclass(self, node: Node):
         className = node.child_by_field_name("name").text.decode()
