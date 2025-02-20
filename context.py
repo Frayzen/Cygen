@@ -1,5 +1,11 @@
 from tree_sitter import Node
-from typing import List, Tuple
+from typing import List
+
+
+def process_type(v: str):
+    v = v.replace("<", "[").replace(">", "]")
+    v = v.replace("std::", "")
+    return v
 
 
 class Method:
@@ -19,6 +25,7 @@ class ContextHolder:
     def __init__(self) -> None:
         self.methods: List[Method] = []
         self.classes: List[ClassHolder] = []
+        self.includes: List[str] = []
         self.typenames: List[str] = []
         self.template = None
 
@@ -31,17 +38,24 @@ class ContextHolder:
         if self.template is not None:
             methodName += f"[{self.template}]"
             self.template = None
+        parameters = node.child_by_field_name("parameters").text.decode()
         self.methods.append(
             Method(
-                retTypeNode.text.decode() if retTypeNode is not None else "",
+                (
+                    process_type(retTypeNode.text.decode())
+                    if retTypeNode is not None
+                    else ""
+                ),
                 methodName,
-                node.child_by_field_name("parameters").text.decode(),
+                process_type(parameters),
             )
         )
 
     def push_typename(self, node: Node) -> None:
-        print(node)
         self.typenames.append(node.child_by_field_name("declarator").text.decode())
+
+    def push_include(self, node: Node) -> None:
+        self.includes.append(node.child_by_field_name("path").text.decode()[1:-1])
 
     def create_subclass(self, node: Node):
         className = node.child_by_field_name("name").text.decode()

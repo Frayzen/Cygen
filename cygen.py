@@ -1,4 +1,5 @@
 import tree_sitter_cpp as tscpp
+from includes import include_almanac
 from tree_sitter import Language, Parser, Node
 
 from context import ClassHolder, ContextHolder, NamespaceHolder
@@ -38,6 +39,8 @@ def parseFile(path) -> NamespaceHolder:
             context.set_template(node)
         elif node.type == "type_definition":
             context.push_typename(node)
+        elif node.type == "preproc_include":
+            context.push_include(node)
         return context
 
     def traverse(curContext: ContextHolder):
@@ -71,6 +74,10 @@ def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> s
 
     def generateNamespace(namespace: ContextHolder):
         builder = ""
+        for include in namespace.includes:
+            if include in include_almanac:
+                builder += f"from libcpp cimport {include}\n"
+        builder += "\n"
         if not namespace.empty():
             namespacedef = (
                 "" if namespace.name == "" else f' namespace "{namespace.name}"'
