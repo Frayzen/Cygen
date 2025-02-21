@@ -22,10 +22,12 @@ class Method:
 
 
 class ContextHolder:
-    def __init__(self) -> None:
+    def __init__(self, parent) -> None:
+        self.parent_namespace = parent
         self.methods: List[Method] = []
         self.classes: List[ClassHolder] = []
-        self.includes: List[str] = []
+        self.sys_includes: List[str] = []
+        self.local_includes: List[str] = []
         self.typenames: List[str] = []
         self.template = None
 
@@ -54,8 +56,13 @@ class ContextHolder:
     def push_typename(self, node: Node) -> None:
         self.typenames.append(node.child_by_field_name("declarator").text.decode())
 
-    def push_include(self, node: Node) -> None:
-        self.includes.append(node.child_by_field_name("path").text.decode()[1:-1])
+    def push_include(self, node: Node, issys: bool) -> None:
+        nodetxt = node.child_by_field_name("path").text.decode()
+        print("node txt is ", nodetxt)
+        if issys:
+            self.sys_includes.append(nodetxt[1:-1])
+        else:
+            self.local_includes.append(nodetxt[1:-1])
 
     def create_subclass(self, node: Node):
         className = node.child_by_field_name("name").text.decode()
@@ -63,7 +70,7 @@ class ContextHolder:
             className += f"[{self.template}]"
             self.template = None
         isStruct = node.type == "struct_specifier"
-        subclass = ClassHolder(className, not isStruct)
+        subclass = ClassHolder(self, className, not isStruct)
         self.classes.append(subclass)
         return subclass
 
@@ -82,10 +89,10 @@ class ContextHolder:
 
 
 class ClassHolder(ContextHolder):
-    def __init__(self, name: str, public_access: bool) -> None:
+    def __init__(self, parent: ContextHolder, name: str, public_access: bool) -> None:
         self.name = name
         self.public_access = public_access
-        super().__init__()
+        super().__init__(parent)
 
     def set_access(self, node: Node):
         self.public_access = node.text.decode() == "public"
@@ -96,15 +103,16 @@ class ClassHolder(ContextHolder):
 
 
 class NamespaceHolder(ContextHolder):
-    def __init__(self, filePath: str, name: str) -> None:
+    def __init__(self, parent: ContextHolder, filePath: str, name: str) -> None:
         self.filePath = filePath
         self.name = name
         self.subnamespaces: List[NamespaceHolder] = []
-        super().__init__()
+        super().__init__(parent)
 
     def create_subnamespace(self, node: Node):
         name = node.child_by_field_name("name").text.decode()
         sub = NamespaceHolder(
+            self,
             self.filePath,
             self.name + "::" + name if self.name != "" else name,
         )

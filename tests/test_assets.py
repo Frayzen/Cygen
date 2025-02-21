@@ -42,7 +42,7 @@ cdef extern from "tests/assets/classes.hh":
     cdef cppclass TestClass:
         TestClass(int* a)
         void test(char o)
-        cdef cppclass InnerClass:
+        cppclass InnerClass:
             void defaultPrivate(int a)
     cdef cppclass SubClass:
         SubClass(int* b, char c)
@@ -50,7 +50,8 @@ cdef extern from "tests/assets/classes.hh":
     cdef cppclass TestStruct:
         TestStruct(int* a)
         void test(char o)
-        cdef cppclass InnerStruct:
+        cppclass InnerStruct:
+            pass
     cdef cppclass SubStruct:
         SubStruct(int* b, char c)
         int other()
@@ -67,7 +68,7 @@ cdef extern from "tests/assets/templates.hh":
         void test(char o)
         OtherType test[OtherType](OtherType a)
         void test[int](int a)
-        cdef cppclass InnerClass:
+        cppclass InnerClass:
             void defaultPrivate(int a)
     """
     checkGen(namespace, expected)

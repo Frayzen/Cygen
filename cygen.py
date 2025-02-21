@@ -1,3 +1,7 @@
+from enum import Enum
+from os import makedirs
+import os
+from os.path import dirname
 import tree_sitter_cpp as tscpp
 from includes import include_almanac
 from tree_sitter import Language, Parser, Node
@@ -21,7 +25,7 @@ def parseFile(path) -> NamespaceHolder:
     )
     cursor = tree.walk()
 
-    rootNamespace = NamespaceHolder(path, "")
+    rootNamespace = NamespaceHolder(None, path, "")
 
     def parse_cur(node: Node, context: ContextHolder):
         if node.type == "function_declarator":
@@ -60,23 +64,32 @@ defaultPrefix = "#distutils: language = c++\n#cython: language_level = 3\n\n"
 
 def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> str:
 
-    def generateContext(context: ContextHolder, tabs=""):
+    def generateContext(context: ContextHolder, depth=0):
         builder = ""
-        if isinstance(context, ClassHolder):
-            builder += f"{tabs}cdef cppclass {context.name}:\n"
+        tabs = depth * "    "
         for typename in context.typenames:
             builder += f"    {tabs}cdef cppclass {typename}:\n        {tabs}pass\n"
         for m in context.methods:
             builder += tabs + "    " + str(m) + "\n"
         for subc in context.classes:
-            builder += generateContext(subc, tabs="    " + tabs)
+            builder += generateContext(subc, depth=depth + 1)
+        if builder == "":
+            builder = f"{tabs}    pass\n"
+        if isinstance(context, ClassHolder):
+            classheader = f"{tabs}"
+            if isinstance(context.parent_namespace, NamespaceHolder):
+                classheader += "cdef "
+            classheader += f"cppclass {context.name}:\n"
+            builder = classheader + builder
         return builder
 
     def generateNamespace(namespace: ContextHolder):
         builder = ""
-        for include in namespace.includes:
+        for include in namespace.sys_includes:
             if include in include_almanac:
                 builder += f"from libcpp cimport {include}\n"
+        for include in namespace.local_includes:
+            builder += f'"""#include \\"{include}\\" """'
         builder += "\n"
         if not namespace.empty():
             namespacedef = (
@@ -89,3 +102,42 @@ def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> s
         return builder
 
     return prefix + generateNamespace(namespace)
+
+
+if __name__ == "__main__":
+    import argparse
+
+    ap = argparse.ArgumentParser(
+        "cygen", "cygen [-o directory] [-p] [-v|-vv] [-s] files..."
+    )
+    ap.add_argument("-o", "--out", default="./", help="The output folder")
+    ap.add_argument("-p", "--prefix", help="The cython prefix on each generated file")
+    ap.add_argument("-v", "-vv", "--verbose", action="count", default=0)
+    ap.add_argument("files", nargs="+")
+    res = ap.parse_args()
+
+    prefix = defaultPrefix if res.prefix is None else res.prefix
+
+    makedirs(res.out, exist_ok=True)
+
+    absolute_paths = [os.path.abspath(path) for path in res.files]
+    common_parent = os.path.commonpath(absolute_paths)
+    out_relative_paths = [
+        os.path.relpath(".".join(path.split(".")[:-1]) + ".pxd", common_parent)
+        for path in res.files
+    ]
+
+    for i in range(len(res.files)):
+        inpath = absolute_paths[i]
+        relpath = out_relative_paths[i]
+        outpath = os.path.abspath(res.out + os.sep + relpath)
+        if res.verbose >= 1:
+            print(f"{outpath}", flush=True)
+        if res.verbose >= 2:
+            print(f"Generating {outpath} from {inpath}...", flush=True)
+        namespace = parseFile(inpath)
+        generated = generateCython(namespace)
+        makedirs(dirname(outpath), exist_ok=True)
+        with open(outpath, mode="w") as out:
+            out.write(generated)
+            out.close()
