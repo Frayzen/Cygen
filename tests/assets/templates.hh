@@ -1,3 +1,4 @@
+#pragma once
 template <typename Type> class TestClass {
   class InnerClass {
     void defaultPrivate(int a);

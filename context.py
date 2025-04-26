@@ -56,10 +56,9 @@ class ContextHolder:
     def push_typename(self, node: Node) -> None:
         self.typenames.append(node.child_by_field_name("declarator").text.decode())
 
-    def push_include(self, node: Node, issys: bool) -> None:
+    def push_include(self, node: Node) -> None:
         nodetxt = node.child_by_field_name("path").text.decode()
-        print("node txt is ", nodetxt)
-        if issys:
+        if nodetxt[0] == "<":
             self.sys_includes.append(nodetxt[1:-1])
         else:
             self.local_includes.append(nodetxt[1:-1])

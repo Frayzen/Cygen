@@ -1,3 +1,4 @@
+#pragma once
 class TestClass {
   class InnerClass {
     void defaultPrivate(int a);

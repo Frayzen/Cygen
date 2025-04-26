@@ -89,7 +89,10 @@ def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> s
             if include in include_almanac:
                 builder += f"from libcpp cimport {include}\n"
         for include in namespace.local_includes:
-            builder += f'"""#include \\"{include}\\" """'
+            package = ".".join(include.split("/"))
+            package = ".".join(package.split(".")[:-1])
+            builder += f"from {package} cimport *"
+
         builder += "\n"
         if not namespace.empty():
             namespacedef = (
