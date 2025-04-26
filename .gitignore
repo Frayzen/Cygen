@@ -2,3 +2,5 @@ tree-sitter-cpp
 __pycache__/
 Testing
 dbg.py
+cygen.egg-info/
+build/

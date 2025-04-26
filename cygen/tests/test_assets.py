@@ -1,5 +1,5 @@
-from cygen import generateCython, parseFile
-from context import NamespaceHolder
+from cygen.cygen import generateCython, parseFile
+from cygen.context import NamespaceHolder
 
 
 def checkGen(namespace: NamespaceHolder, expected: str):

@@ -1,12 +1,11 @@
-from enum import Enum
 from os import makedirs
 import os
 from os.path import dirname
 import tree_sitter_cpp as tscpp
-from includes import include_almanac
+from cygen.includes import include_almanac
 from tree_sitter import Language, Parser, Node
 
-from context import ClassHolder, ContextHolder, NamespaceHolder
+from cygen.context import ClassHolder, ContextHolder, NamespaceHolder
 from io import open
 
 
@@ -106,8 +105,7 @@ def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> s
 
     return prefix + generateNamespace(namespace)
 
-
-if __name__ == "__main__":
+def main():
     import argparse
 
     ap = argparse.ArgumentParser(
@@ -139,8 +137,11 @@ if __name__ == "__main__":
         if res.verbose >= 2:
             print(f"Generating {outpath} from {inpath}...", flush=True)
         namespace = parseFile(inpath)
-        generated = generateCython(namespace)
+        generated = generateCython(namespace, prefix)
         makedirs(dirname(outpath), exist_ok=True)
         with open(outpath, mode="w") as out:
             out.write(generated)
             out.close()
+
+if __name__ == "__main__":
+    main()
