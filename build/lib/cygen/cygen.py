@@ -63,6 +63,7 @@ defaultPrefix = "#distutils: language = c++\n#cython: language_level = 3\n\n"
 
 def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> str:
 
+    # used to generate a context (either namespace or class)
     def generateContext(context: ContextHolder, depth=0):
         builder = ""
         tabs = depth * "    "
@@ -82,6 +83,7 @@ def generateCython(namespace: NamespaceHolder, prefix: str = defaultPrefix) -> s
             builder = classheader + builder
         return builder
 
+    # used when we get in a namespace to generate the cython associated with it
     def generateNamespace(namespace: ContextHolder):
         builder = ""
         for include in namespace.sys_includes:

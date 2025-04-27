@@ -1,6 +1,7 @@
 # Presentation
 
 Cygen is an independent project that aims to simplify the integration of **cython** inside of c++ projects.
+It is an executable that aims to generate the `.pyx` and `.pxd` based on your `.cpp` files.
 
 # Requirements
 
@@ -19,6 +20,14 @@ You can install cygen using:
 $ git clone https://github.com/Frayzen/Cygen
 $ cd Cygen
 $ pip install .
+```
+
+# Usage
+
+```
+$ 
+usage: cygen [-o directory] [-p] [-v|-vv] [-s] files...
+cygen: error: the following arguments are required: files
 ```
 
 # Related content

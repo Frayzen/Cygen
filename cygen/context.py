@@ -1,10 +1,12 @@
 from tree_sitter import Node
 from typing import List
+import re
 
 
 def process_type(v: str):
     v = v.replace("<", "[").replace(">", "]")
     v = v.replace("std::", "")
+    v = re.sub("enum \\w+", "int", v) # handle enums
     return v
 
 
@@ -41,13 +43,14 @@ class ContextHolder:
             methodName += f"[{self.template}]"
             self.template = None
         parameters = node.child_by_field_name("parameters").text.decode()
-        self.methods.append(
-            Method(
-                (
+        retType = (
                     process_type(retTypeNode.text.decode())
                     if retTypeNode is not None
                     else ""
-                ),
+                )
+        self.methods.append(
+            Method(
+                retType,
                 methodName,
                 process_type(parameters),
             )

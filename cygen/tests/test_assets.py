@@ -83,3 +83,11 @@ cdef extern from "tests/assets/typedef.hh":
     Ok test(Ok a, Ok* b)
     """
     checkGen(namespace, expected)
+
+def test_typedef():
+    namespace = parseFile("tests/assets/enums.hh")
+    expected = """
+cdef extern from "tests/assets/enums.hh":
+    int ok(int x)
+    """
+    checkGen(namespace, expected)
